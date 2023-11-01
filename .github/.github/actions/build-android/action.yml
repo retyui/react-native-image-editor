@@ -1,0 +1,65 @@
+name: Build Android
+description: 'Set up your GitHub Actions workflow with a specific version of Node.js'
+inputs:
+  new-arch-enabled:
+    description: 'Enable new architecture (example: 1 or 0))'
+    required: true
+
+  rn-ver:
+    description: 'Version of React Native (example: 0.72.6))'
+    required: true
+
+  arch:
+    description: 'Architecture (example: "arm64-v8a" or "x86_64,arm64-v8a"))'
+    required: false
+    default: 'armeabi-v7a,arm64-v8a,x86,x86_64'
+
+  module-to-install:
+    description: 'Module to install (example: "react-native-architectures" or "file:/path/to/module"))'
+    required: true
+
+  store-artifacts:
+    description: 'Store artifacts on GitHub (example: true or false))'
+    required: false
+    default: 'true'
+
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: .github/.github/actions/lock-java-ver
+
+    - name: Build Android (${{ inputs.arch }})
+      working-directory: /tmp
+      shell: bash
+      env:
+        APP_NAME: example_${{ inputs.rn-ver }}_${{ inputs.new-arch-enabled }}
+      run: |
+        # Create new tmp React Native project
+        npx react-native@${{ inputs.rn-ver }} init ${{ env.APP_NAME }} --version ${{ inputs.rn-ver }}
+        cd ${{ env.APP_NAME }}
+
+        # Install my module
+        yarn add ${{ inputs.module-to-install }}
+
+        # Debug info
+        npx react-native@${{ inputs.rn-ver }} info
+
+        # Enable new arch for Android
+        if [[ '${{ inputs.new-arch-enabled }}' == '1' ]]; then
+          sed -i 's/newArchEnabled=false/newArchEnabled=true/' android/gradle.properties
+        fi
+
+        # Build Android
+        ./android/gradlew assembleRelease --no-daemon -p android -PreactNativeArchitectures=${{ inputs.arch }}
+
+    - name: Store artifacts on GitHub
+      uses: actions/upload-artifact@v3
+      if: ${{ inputs.store-artifacts == 'true' }}
+      env:
+        APP_NAME: example_${{ inputs.rn-ver }}_${{ inputs.new-arch-enabled }}
+      with:
+        name: android-${{ inputs.arch }}-release
+        if-no-files-found: error
+        retention-days: 30
+        path: /tmp/${{ env.APP_NAME }}/android/app/build/outputs/apk/release/app-release.apk

@@ -1,0 +1,60 @@
+name: Main
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UBUNTU_VER: 22.04
+  ACTIONS_RUNNER_DEBUG: true
+
+jobs:
+  cache_node_modules:
+    name: Cache node_modules
+    runs-on: ubuntu-${{ env.UBUNTU_VER }}
+    steps:
+      - uses: ./.github/actions/checkout-repo
+      - uses: ./.github/actions/install-dependencies
+
+  linter:
+    name: Code
+    runs-on: ubuntu-${{ env.UBUNTU_VER }}
+    needs: [cache_node_modules]
+    steps:
+      - uses: ./.github/actions/checkout-repo
+      - uses: ./.github/actions/install-dependencies
+
+      - name: Lint files
+        run: yarn run test:eslint
+
+      - name: Flow files
+        run: yarn run test:flow
+
+  build-android:
+    name: Build Android
+    needs: [cache_node_modules]
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        new_arch_enabled: [ 1, 0 ]
+        rn_ver: [0.71-stable, latest, next ]
+    runs-on: ubuntu-${{ env.UBUNTU_VER }}
+    steps:
+      - uses: ./.github/actions/checkout-repo
+      - uses: ./.github/actions/install-dependencies
+      - uses: ./.github/actions/build-android
+        with:
+          arch: arm64-v8a
+          new-arch-enabled: ${{ matrix.new_arch_enabled }}
+          rn-ver: ${{ matrix.rn_ver }}
+          module-to-install: file:${{ github.workspace }}
+          store-artifacts: true

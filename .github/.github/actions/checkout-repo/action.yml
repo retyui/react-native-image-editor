@@ -1,0 +1,15 @@
+name: Checkout repository
+description: 'Download repository from GitHub.'
+inputs:
+  fetch-depth:
+    description: 'Depth for fetching repository.'
+    required: false
+    default: 0
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
