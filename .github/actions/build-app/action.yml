@@ -78,13 +78,20 @@ runs:
         if [[ '${{ inputs.platform }}' == 'ios' ]]; then
           brew install xcbeautify
 
+
+          # Disable Flipper
+          # RN 0.69.x and 0.70.x
+          sed -i.bak "s|FlipperConfiguration.enabled|ENV['NO_FLIPPER'] == \"1\" ? FlipperConfiguration.disabled : FlipperConfiguration.enabled|g" ios/Podfile
+          # RN <= 0.68.x
+          sed -i.bak 's|use_flipper!()|if ENV["NO_FLIPPER"] != "1"\n    use_flipper!()\n  end|g' ios/Podfile
+
           # Update pods after adding new module
           npx pod-install
-      
+
           # Build iOS App
           xcodebuild -scheme ${{ env.APP_NAME }} -workspace ios/${{ env.APP_NAME }}.xcworkspace -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'  | xcbeautify --quiet
-        
-          # set output variable          
+
+          # set output variable
           echo "app_path=$(find ~/Library/Developer/Xcode/DerivedData -type d -name "${{ env.APP_NAME }}.app")" >> $GITHUB_OUTPUT
         else
           # Enable new arch for Android
@@ -94,7 +101,7 @@ runs:
 
           # Build Android
           ./android/gradlew assembleRelease --no-daemon -p android -PreactNativeArchitectures=${{ inputs.arch }}
-        
+
           # set output variable
           echo "app_path=$(find $(pwd)/android -type f -name '*.apk')" >> $GITHUB_OUTPUT
         fi
