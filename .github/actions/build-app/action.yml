@@ -27,14 +27,26 @@ inputs:
     description: 'Platform (example: android or ios))'
     required: true
 
+  node-version:
+    description: 'The Node.js version to set up'
+    required: false
+
+  java-version:
+    description: 'The Java version to set up'
+    required: false
+
 
 runs:
   using: 'composite'
   steps:
     - uses: ./.github/actions/lock-nodejs-ver
+      with:
+        node-version: ${{ inputs.node-version }}
 
     - uses: ./.github/actions/lock-java-ver
       if: ${{ inputs.platform == 'android' }}
+      with:
+        java-version: ${{ inputs.java-version }}
 
     - uses: ./.github/actions/lock-ruby-ver
       if: ${{ inputs.platform == 'ios' }}
@@ -84,6 +96,11 @@ runs:
           sed -i.bak "s|FlipperConfiguration.enabled|ENV['NO_FLIPPER'] == \"1\" ? FlipperConfiguration.disabled : FlipperConfiguration.enabled|g" ios/Podfile
           # RN <= 0.68.x
           sed -i.bak 's|use_flipper!()|if ENV["NO_FLIPPER"] != "1"\n    use_flipper!()\n  end|g' ios/Podfile
+
+          # Fix Xcode 14 (react-native@0.67.x)
+          sed -i.bak 's|node->getLayout().hadOverflow() \|\||node->getLayout().hadOverflow()\|\||g' node_modules/react-native/ReactCommon/yoga/yoga/Yoga.cpp
+          sed -i.bak 's|node->getLayout().hadOverflow() \||node->getLayout().hadOverflow()\|\||g' node_modules/react-native/ReactCommon/yoga/yoga/Yoga.cpp
+
 
           # Update pods after adding new module
           npx pod-install
