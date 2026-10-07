@@ -59,7 +59,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        rn_ver: [ 0.74-stable, 0.75-stable, 0.76-stable, 0.77-stable, 0.78-stable, 0.79-stable, 0.80-stable, 0.81-stable, 0.82-stable, 0.83-stable, 0.84-stable, 0.85-stable, 0.86-stable, latest ] # also, can be any npm tag: next, nightly
+        rn_ver: [  0.74.7, 0.75.5, 0.76.9, 0.77.3, 0.78.3, 0.79.7, 0.80.3, 0.81.6, 0.82.1, 0.83.10, 0.84.1, 0.85.3, 0.86.3, 0.87.1 ] # also, can be any npm tag: next, nightly
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -80,7 +80,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        rn_ver: [ 0.74-stable, 0.75-stable, 0.76-stable, 0.77-stable, 0.78-stable, 0.79-stable, 0.80-stable, 0.81-stable, 0.82-stable, 0.83-stable, 0.84-stable, 0.85-stable, 0.86-stable, latest ] # also, can be any npm tag: next, nightly
+        rn_ver: [  0.74.7, 0.75.5, 0.76.9, 0.77.3, 0.78.3, 0.79.7, 0.80.3, 0.81.6, 0.82.1, 0.83.10, 0.84.1, 0.85.3, 0.86.3, 0.87.1 ] # also, can be any npm tag: next, nightly
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
